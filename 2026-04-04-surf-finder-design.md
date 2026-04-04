@@ -55,11 +55,11 @@ Surf Finder
 ```
 Surf spots with 2-3ft waves within 30mi of San Clemente, CA:
 
- #  Spot                  Waves    Conditions   Tide       Wind         Distance   Directions
-──────────────────────────────────────────────────────────────────────────────────────────────────
- 1  Trestles (Lowers)     2-3 ft   Fair-Good    Rising     Offshore     2.1 mi     https://maps.google.com/...
- 2  T-Street              2-3 ft   Fair         Rising     Offshore     3.4 mi     https://maps.google.com/...
- 3  San Onofre            2-3 ft   Fair         Rising     Onshore      5.8 mi     https://maps.google.com/...
+ #  Spot                  Waves    Conditions   Tide     Wind       Parking          Distance   Directions
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 1  Trestles (Lowers)     2-3 ft   Fair-Good    Rising   Offshore   Free             2.1 mi     https://maps.google.com/...
+ 2  T-Street              2-3 ft   Fair         Rising   Offshore   Free             3.4 mi     https://maps.google.com/...
+ 3  San Onofre            2-3 ft   Fair         Rising   Onshore    $15/day (pass)   5.8 mi     https://maps.google.com/...
 ```
 
 ### Sort Options
@@ -87,13 +87,17 @@ Each region is a separate JSON file in `spots/`:
     "lon": -117.5893,
     "surfline_id": "5842041f4e65fad6a7708890",
     "parking_lat": 33.3815,
-    "parking_lon": -117.5880
+    "parking_lon": -117.5880,
+    "parking_cost": "Free",
+    "parking_notes": "Walk-in or bike only. No lot — street/trail access."
   }
 ]
 ```
 
 - `surfline_id` — optional. If present, uses Surfline API. If absent, falls back to Open-Meteo marine wave API.
 - `parking_lat/parking_lon` — optional. If absent, defaults to the spot's lat/lon. Google Maps directions link points here.
+- `parking_cost` — string. Pre-populated for SoCal spots. Examples: `"Free"`, `"$15/day"`, `"$2/hr metered"`, `"State park pass required ($15/day)"`. User can edit when adding/managing spots.
+- `parking_notes` — optional. Extra info like "lot fills by 7am on weekends" or "street parking on PCH".
 
 ### Menu
 
@@ -110,7 +114,7 @@ Spot Regions:
 
 **Add region:** prompts for region name, creates empty JSON file, then prompts to add spots.
 
-**Add spot:** prompts for name, lat, lon, surfline_id (or skip), parking coords (or "same").
+**Add spot:** prompts for name, lat, lon, surfline_id (or skip), parking coords (or "same"), parking cost (e.g., "Free", "$15/day"), parking notes (or skip).
 
 **Delete region:** confirmation prompt, removes the JSON file.
 
@@ -188,13 +192,14 @@ Save this contact for next time? (only shown for new recipients)
 ```
 T-Street — 2-3ft, Fair
 Tide: Rising | Wind: Offshore
+Parking: Free
 https://maps.google.com/dir/...
 ```
 
 ### Email Format
 
 Subject: `Surf Alert: T-Street — 2-3ft`
-Body: spot name, wave size, conditions, tide, wind, Google Maps directions link.
+Body: spot name, wave size, conditions, tide, wind, parking cost/notes, Google Maps directions link.
 
 ---
 
