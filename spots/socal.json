@@ -1,0 +1,412 @@
+[
+  {
+    "name": "Rincon",
+    "lat": 34.3727,
+    "lon": -119.4757,
+    "surfline_id": "5842041f4e65fad6a7708001",
+    "parking_lat": 34.3730,
+    "parking_lon": -119.4762,
+    "parking_cost": "$15/day",
+    "parking_notes": "Rincon Beach County Park lot. Fills fast on good swells. Street parking along PCH also available."
+  },
+  {
+    "name": "Ventura Point (C Street)",
+    "lat": 34.2719,
+    "lon": -119.3046,
+    "surfline_id": "5842041f4e65fad6a7708002",
+    "parking_lat": 34.2723,
+    "parking_lon": -119.3058,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking along Promenade. Larger lot at Surfer's Knoll nearby. Get there early on weekends."
+  },
+  {
+    "name": "Mondos (Mussel Shoals)",
+    "lat": 34.3422,
+    "lon": -119.4273,
+    "surfline_id": "5842041f4e65fad6a7708003",
+    "parking_lat": 34.3420,
+    "parking_lon": -119.4268,
+    "parking_cost": "Free",
+    "parking_notes": "Small gravel pullout along PCH. Limited spots — arrive early. Overflow parking on shoulder."
+  },
+  {
+    "name": "County Line",
+    "lat": 34.0468,
+    "lon": -118.9647,
+    "surfline_id": "5842041f4e65fad6a7708004",
+    "parking_lat": 34.0465,
+    "parking_lon": -118.9651,
+    "parking_cost": "Free",
+    "parking_notes": "Free dirt lot on both sides of PCH at the LA/Ventura county line. Can get crowded on weekends."
+  },
+  {
+    "name": "Zuma Beach",
+    "lat": 34.0153,
+    "lon": -118.8221,
+    "surfline_id": "5842041f4e65fad6a7708005",
+    "parking_lat": 34.0148,
+    "parking_lon": -118.8226,
+    "parking_cost": "$3/hr metered",
+    "parking_notes": "Large LA County beach lot. $3/hr, $25 max. Kiosks and pay-by-plate. Free after 7pm."
+  },
+  {
+    "name": "Malibu (Surfrider Beach)",
+    "lat": 34.0364,
+    "lon": -118.6776,
+    "surfline_id": "5842041f4e65fad6a7708006",
+    "parking_lat": 34.0361,
+    "parking_lon": -118.6783,
+    "parking_cost": "$3/hr metered",
+    "parking_notes": "Malibu Lagoon State Beach lot. Very limited — arrive before 8am on good days. Street parking on PCH fills fast."
+  },
+  {
+    "name": "Topanga",
+    "lat": 34.0371,
+    "lon": -118.5985,
+    "surfline_id": "5842041f4e65fad6a7708007",
+    "parking_lat": 34.0368,
+    "parking_lon": -118.5990,
+    "parking_cost": "$15/day",
+    "parking_notes": "Topanga State Beach lot. Day use fee collected seasonally. Can park on PCH shoulder for free (check signs)."
+  },
+  {
+    "name": "El Porto",
+    "lat": 33.9192,
+    "lon": -118.4132,
+    "surfline_id": "5842041f4e65fad6a7708008",
+    "parking_lat": 33.9190,
+    "parking_lon": -118.4138,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "Metered street parking on Highland Ave and side streets. Meters run 8am–6pm. Free on street after hours."
+  },
+  {
+    "name": "Manhattan Beach Pier",
+    "lat": 33.8847,
+    "lon": -118.4132,
+    "surfline_id": "5842041f4e65fad6a7708009",
+    "parking_lat": 33.8842,
+    "parking_lon": -118.4128,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "Meters on Manhattan Beach Blvd and The Strand. Lots on Valley Dr. Gets crowded on summer weekends."
+  },
+  {
+    "name": "Hermosa Beach",
+    "lat": 33.8621,
+    "lon": -118.4002,
+    "surfline_id": "5842041f4e65fad6a7708010",
+    "parking_lat": 33.8618,
+    "parking_lon": -118.3998,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "Street meters on Pier Ave and Hermosa Ave. City lots nearby. 2-hr limit on many blocks — plan accordingly."
+  },
+  {
+    "name": "Torrance Beach (RAT Beach)",
+    "lat": 33.8328,
+    "lon": -118.3971,
+    "surfline_id": "5842041f4e65fad6a7708011",
+    "parking_lat": 33.8325,
+    "parking_lon": -118.3975,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking along Paseo de la Playa. Walk-in access from the bluff stairs. Limited spots."
+  },
+  {
+    "name": "Huntington Beach Pier",
+    "lat": 33.6553,
+    "lon": -118.0035,
+    "surfline_id": "5842041f4e65fad6a7708012",
+    "parking_lat": 33.6557,
+    "parking_lon": -118.0030,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "Large city lot and meters on PCH. $2/hr, $20/day max. State Beach lot adjacent charges $15/day on weekends."
+  },
+  {
+    "name": "Huntington Cliffs",
+    "lat": 33.6710,
+    "lon": -118.0070,
+    "surfline_id": "5842041f4e65fad6a7708013",
+    "parking_lat": 33.6715,
+    "parking_lon": -118.0075,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking on PCH north of the pier. Walk down the sandy path to the beach."
+  },
+  {
+    "name": "56th Street Newport",
+    "lat": 33.6357,
+    "lon": -117.9407,
+    "surfline_id": "5842041f4e65fad6a7708014",
+    "parking_lat": 33.6360,
+    "parking_lon": -117.9400,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking on Balboa Peninsula side streets. Meters active on Balboa Blvd — check signs."
+  },
+  {
+    "name": "Newport Beach Pier",
+    "lat": 33.6069,
+    "lon": -117.9277,
+    "surfline_id": "5842041f4e65fad6a7708015",
+    "parking_lat": 33.6072,
+    "parking_lon": -117.9281,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "City lots and meters near the pier. $2/hr. Lot on 21st St. Gets packed in summer — arrive early."
+  },
+  {
+    "name": "Blackies",
+    "lat": 33.6147,
+    "lon": -117.9317,
+    "surfline_id": "5842041f4e65fad6a7708016",
+    "parking_lat": 33.6150,
+    "parking_lon": -117.9320,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking along W Balboa Blvd near 19th St. Walk to the beach. Local vibe — keep it chill."
+  },
+  {
+    "name": "The Wedge",
+    "lat": 33.5948,
+    "lon": -117.8817,
+    "surfline_id": "5842041f4e65fad6a7708017",
+    "parking_lat": 33.5945,
+    "parking_lon": -117.8822,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking on Peninsula Point. Limited spots — can fill by 7am on big days. Walk from Balboa Park."
+  },
+  {
+    "name": "Salt Creek",
+    "lat": 33.4828,
+    "lon": -117.7257,
+    "surfline_id": "5842041f4e65fad6a7708018",
+    "parking_lat": 33.4832,
+    "parking_lon": -117.7252,
+    "parking_cost": "$1/hr metered",
+    "parking_notes": "Salt Creek Beach Park lot. $1/hr metered, $15 max. Stairs down to beach. Fills fast on south swells."
+  },
+  {
+    "name": "Dana Point (Doheny State Beach)",
+    "lat": 33.4612,
+    "lon": -117.6896,
+    "surfline_id": "5842041f4e65fad6a7708019",
+    "parking_lat": 33.4615,
+    "parking_lon": -117.6900,
+    "parking_cost": "$15/day",
+    "parking_notes": "Doheny State Beach day use fee. Large paved lot right on the sand. Great for families."
+  },
+  {
+    "name": "T-Street (San Clemente)",
+    "lat": 33.4276,
+    "lon": -117.6195,
+    "surfline_id": "5842041f4e65fad6a7708020",
+    "parking_lat": 33.4280,
+    "parking_lon": -117.6190,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking on Buena Vista and T Street. Limited spots. Arrive early on summer mornings."
+  },
+  {
+    "name": "San Clemente Pier",
+    "lat": 33.4126,
+    "lon": -117.6182,
+    "surfline_id": "5842041f4e65fad6a7708021",
+    "parking_lat": 33.4130,
+    "parking_lon": -117.6188,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "City Beach lot and meters near the pier. $2/hr. Walk the pier and watch the lineup before paddling out."
+  },
+  {
+    "name": "Cottons (San Clemente)",
+    "lat": 33.4016,
+    "lon": -117.5916,
+    "surfline_id": "5842041f4e65fad6a7708022",
+    "parking_lat": 33.4500,
+    "parking_lon": -117.5900,
+    "parking_cost": "Free",
+    "parking_notes": "Park at the Trestles trailhead (Carl's Jr lot on Cristianitos Rd). ~20-min walk to Cottons."
+  },
+  {
+    "name": "Uppers (Trestles)",
+    "lat": 33.3921,
+    "lon": -117.5883,
+    "surfline_id": "5842041f4e65fad6a7708023",
+    "parking_lat": 33.4500,
+    "parking_lon": -117.5900,
+    "parking_cost": "Free",
+    "parking_notes": "Park at the Trestles trailhead (Carl's Jr lot on Cristianitos Rd). ~25-min walk in through San Onofre State Beach."
+  },
+  {
+    "name": "Lowers (Trestles)",
+    "lat": 33.3878,
+    "lon": -117.5878,
+    "surfline_id": "5842041f4e65fad6a7708024",
+    "parking_lat": 33.4500,
+    "parking_lon": -117.5900,
+    "parking_cost": "Free",
+    "parking_notes": "Park at the Trestles trailhead (Carl's Jr lot on Cristianitos Rd). ~25-min walk in. Day use pass sometimes enforced."
+  },
+  {
+    "name": "Middles (Trestles)",
+    "lat": 33.3898,
+    "lon": -117.5880,
+    "surfline_id": "5842041f4e65fad6a7708025",
+    "parking_lat": 33.4500,
+    "parking_lon": -117.5900,
+    "parking_cost": "Free",
+    "parking_notes": "Park at the Trestles trailhead (Carl's Jr lot on Cristianitos Rd). Between Uppers and Lowers on the walk in."
+  },
+  {
+    "name": "San Onofre (Old Man's)",
+    "lat": 33.3723,
+    "lon": -117.5654,
+    "surfline_id": "5842041f4e65fad6a7708026",
+    "parking_lat": 33.3726,
+    "parking_lon": -117.5660,
+    "parking_cost": "$15/day",
+    "parking_notes": "San Onofre State Beach day use fee. Vehicle entry required. Chill longboard vibe with fire pits."
+  },
+  {
+    "name": "Oceanside Pier",
+    "lat": 33.1952,
+    "lon": -117.3856,
+    "surfline_id": "5842041f4e65fad6a7708027",
+    "parking_lat": 33.1956,
+    "parking_lon": -117.3862,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "City beach lot at the pier. $2/hr. Large structure — easy to find. Street parking also available nearby."
+  },
+  {
+    "name": "Oceanside Harbor",
+    "lat": 33.2124,
+    "lon": -117.3951,
+    "surfline_id": "5842041f4e65fad6a7708028",
+    "parking_lat": 33.2128,
+    "parking_lon": -117.3956,
+    "parking_cost": "Free",
+    "parking_notes": "Free parking in the harbor area. Jetty break — wave depends on sand build-up. Consistent and fun on good swells."
+  },
+  {
+    "name": "Cardiff Reef",
+    "lat": 33.0171,
+    "lon": -117.2802,
+    "surfline_id": "5842041f4e65fad6a7708029",
+    "parking_lat": 33.0175,
+    "parking_lon": -117.2808,
+    "parking_cost": "$15/day",
+    "parking_notes": "San Elijo State Beach lot. Day use fee. Walk-in access also from the road shoulder — watch for fast traffic on PCH."
+  },
+  {
+    "name": "Swamis (Self-Realization Fellowship Reef)",
+    "lat": 33.0362,
+    "lon": -117.2924,
+    "surfline_id": "5842041f4e65fad6a7708030",
+    "parking_lat": 33.0365,
+    "parking_lon": -117.2928,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking on S. Coast Hwy 101. Stairs down the bluff. Arrive early — very popular spot."
+  },
+  {
+    "name": "Pipes (Cardiff)",
+    "lat": 33.0098,
+    "lon": -117.2771,
+    "surfline_id": "5842041f4e65fad6a7708031",
+    "parking_lat": 33.0100,
+    "parking_lon": -117.2776,
+    "parking_cost": "$15/day",
+    "parking_notes": "San Elijo State Beach south lot. Reef break just south of Cardiff Reef. Often less crowded than Swamis."
+  },
+  {
+    "name": "Del Mar (15th Street)",
+    "lat": 32.9594,
+    "lon": -117.2717,
+    "surfline_id": "5842041f4e65fad6a7708032",
+    "parking_lat": 32.9597,
+    "parking_lon": -117.2722,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "City meters on Coast Blvd and side streets. $2/hr. Walk to the beach from 15th St access. Nice beach town vibe."
+  },
+  {
+    "name": "Black's Beach",
+    "lat": 32.8894,
+    "lon": -117.2527,
+    "surfline_id": "5842041f4e65fad6a7708033",
+    "parking_lat": 32.8900,
+    "parking_lon": -117.2514,
+    "parking_cost": "Free",
+    "parking_notes": "Park at Torrey Pines Gliderport or Torrey Pines State Reserve ($15/day). Steep cliff trail to the beach — use caution."
+  },
+  {
+    "name": "La Jolla Shores",
+    "lat": 32.8564,
+    "lon": -117.2569,
+    "surfline_id": "5842041f4e65fad6a7708034",
+    "parking_lat": 32.8567,
+    "parking_lon": -117.2575,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking on Calle Frescota and Camino del Oro. Fills fast on weekends — arrive by 8am."
+  },
+  {
+    "name": "Windansea",
+    "lat": 32.8318,
+    "lon": -117.2788,
+    "surfline_id": "5842041f4e65fad6a7708035",
+    "parking_lat": 32.8321,
+    "parking_lon": -117.2793,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking on Neptune Place. Very limited — expect to park several blocks away and walk."
+  },
+  {
+    "name": "Pacific Beach (Tourmaline)",
+    "lat": 32.8012,
+    "lon": -117.2726,
+    "surfline_id": "5842041f4e65fad6a7708036",
+    "parking_lat": 32.8015,
+    "parking_lon": -117.2732,
+    "parking_cost": "Free",
+    "parking_notes": "Free parking lot at Tourmaline Surfing Park. No swimming allowed — dedicated surf spot. Fills fast on mornings."
+  },
+  {
+    "name": "PB Pier (Pacific Beach)",
+    "lat": 32.7868,
+    "lon": -117.2520,
+    "surfline_id": "5842041f4e65fad6a7708037",
+    "parking_lat": 32.7871,
+    "parking_lon": -117.2526,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "Meters on Ocean Blvd and Grand Ave. City lot on Pacific Beach Dr. Gets crowded year-round — PB is party central."
+  },
+  {
+    "name": "Mission Beach",
+    "lat": 32.7697,
+    "lon": -117.2535,
+    "surfline_id": "5842041f4e65fad6a7708038",
+    "parking_lat": 32.7700,
+    "parking_lon": -117.2540,
+    "parking_cost": "$2/hr metered",
+    "parking_notes": "Limited street parking on Mission Blvd. Lot at Belmont Park charges $10+. Walk or bike when possible."
+  },
+  {
+    "name": "Ocean Beach Pier",
+    "lat": 32.7467,
+    "lon": -117.2566,
+    "surfline_id": "5842041f4e65fad6a7708039",
+    "parking_lat": 32.7470,
+    "parking_lon": -117.2572,
+    "parking_cost": "Free",
+    "parking_notes": "Free city lot at Niagara Ave and Abbott St. Street parking on Newport Ave. OB has a local surfer culture."
+  },
+  {
+    "name": "Sunset Cliffs",
+    "lat": 32.7199,
+    "lon": -117.2589,
+    "surfline_id": "5842041f4e65fad6a7708040",
+    "parking_lat": 32.7203,
+    "parking_lon": -117.2595,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking on Sunset Cliffs Blvd. Multiple entry points along the cliffs — scout at low tide. Rocky entries."
+  },
+  {
+    "name": "Imperial Beach Pier",
+    "lat": 32.5793,
+    "lon": -117.1340,
+    "surfline_id": "5842041f4e65fad6a7708041",
+    "parking_lat": 32.5796,
+    "parking_lon": -117.1346,
+    "parking_cost": "Free",
+    "parking_notes": "Free street parking and small lot near the pier. IB is the southernmost surf spot before the border. Consistent beach break."
+  }
+]
