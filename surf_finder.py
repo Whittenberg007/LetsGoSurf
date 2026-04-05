@@ -19,9 +19,12 @@ CONFIG_PATH = os.path.join(APP_DIR, "config.json")
 CONTACTS_PATH = os.path.join(APP_DIR, "contacts.json")
 
 
-def directions_url(spot: dict) -> str:
+def directions_url(spot: dict, device: str = "android") -> str:
+    """Generate maps directions URL. Uses Apple Maps for iPhone, Google Maps for Android."""
     lat = spot.get("parking_lat", spot["lat"])
     lon = spot.get("parking_lon", spot["lon"])
+    if device == "iphone":
+        return f"https://maps.apple.com/?daddr={lat},{lon}"
     return f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"
 
 
@@ -266,10 +269,12 @@ def find_waves(config: dict, contacts: list) -> list:
         print("  Gmail not configured. Go to Settings first.")
         return contacts
 
-    # Build message(s)
+    # Build message(s) using recipient's device preference for maps links
+    device = contact.get("device", "android")
+
     if len(spots_to_send) == 1:
         spot, cond, dist = spots_to_send[0]
-        url = directions_url(spot)
+        url = directions_url(spot, device)
         subject, body = build_spot_message(spot, cond, url)
         send_label = spot["name"]
     else:
@@ -277,7 +282,7 @@ def find_waves(config: dict, contacts: list) -> list:
         subject = f"Surf Report: {len(spots_to_send)} spots near {location_name}"
         lines = [f"Surf spots near {location_name}:\n"]
         for spot, cond, dist in spots_to_send:
-            url = directions_url(spot)
+            url = directions_url(spot, device)
             parking = spot.get("parking_cost", "Unknown")
             lines.append(
                 f"{spot['name']} — {cond['wave_min']}-{cond['wave_max']}ft, {cond['condition_rating']}\n"
@@ -293,7 +298,7 @@ def find_waves(config: dict, contacts: list) -> list:
         # For SMS full list, send individual texts (carrier gateways truncate long messages)
         if len(spots_to_send) > 1:
             for spot, cond, dist in spots_to_send:
-                url = directions_url(spot)
+                url = directions_url(spot, device)
                 _, sms_body = build_spot_message(spot, cond, url)
                 send_sms(gmail, gmail_pw, sms_addr, sms_body)
             sent = True

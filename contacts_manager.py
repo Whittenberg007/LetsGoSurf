@@ -54,12 +54,34 @@ def get_sms_address(phone: str, carrier: str) -> str:
     return template.replace("{number}", phone)
 
 
+DEVICE_TYPES = {"iphone": "iPhone", "android": "Android"}
+
+
+def prompt_device() -> str:
+    """Display device menu and return device key."""
+    print("    Device:")
+    print("      1) iPhone (Apple Maps)")
+    print("      2) Android (Google Maps)")
+    while True:
+        try:
+            choice = int(input("    Device #: ").strip())
+            if choice == 1:
+                return "iphone"
+            elif choice == 2:
+                return "android"
+        except ValueError:
+            pass
+        print("    Invalid choice. Try again.")
+
+
 def display_contact(contact: dict) -> str:
     """Format a contact for display."""
     parts = [contact["name"]]
     if contact.get("phone"):
         carrier_name = CARRIER_DISPLAY.get(contact.get("carrier", ""), contact.get("carrier", ""))
-        parts.append(f"{contact['phone']} ({carrier_name})")
+        device_name = DEVICE_TYPES.get(contact.get("device", ""), "")
+        device_str = f", {device_name}" if device_name else ""
+        parts.append(f"{contact['phone']} ({carrier_name}{device_str})")
     if contact.get("email"):
         parts.append(contact["email"])
     return " — ".join(parts[1:]) if len(parts) > 1 else parts[0]
@@ -90,14 +112,16 @@ def prompt_new_contact() -> dict:
     name = input("    Name: ").strip()
     phone = input("    Phone # (or skip): ").strip()
     carrier = ""
+    device = ""
     if phone and phone.lower() != "skip":
         carrier = prompt_carrier()
+        device = prompt_device()
     else:
         phone = ""
     email = input("    Email (or skip): ").strip()
     if email.lower() == "skip":
         email = ""
-    return {"name": name, "phone": phone, "carrier": carrier, "email": email}
+    return {"name": name, "phone": phone, "carrier": carrier, "device": device, "email": email}
 
 
 def contacts_menu(contacts: list, contacts_path: str = "contacts.json") -> list:
@@ -133,6 +157,13 @@ def contacts_menu(contacts: list, contacts_path: str = "contacts.json") -> list:
                     if phone:
                         contacts[idx]["phone"] = phone
                         contacts[idx]["carrier"] = prompt_carrier()
+                        contacts[idx]["device"] = prompt_device()
+                    else:
+                        # Allow changing device without changing phone
+                        current_device = DEVICE_TYPES.get(contacts[idx].get("device", ""), "not set")
+                        change_device = input(f"    Change device? (current: {current_device}) (y/n): ").strip().lower()
+                        if change_device == "y":
+                            contacts[idx]["device"] = prompt_device()
                     email = input(f"    Email [{contacts[idx].get('email', '')}]: ").strip()
                     if email:
                         contacts[idx]["email"] = email
