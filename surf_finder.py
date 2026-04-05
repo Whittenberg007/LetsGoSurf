@@ -278,33 +278,27 @@ def find_waves(config: dict, contacts: list) -> list:
         subject, body = build_spot_message(spot, cond, url)
         send_label = spot["name"]
     else:
-        # Full list message
+        # Build one compiled message for the full list
         subject = f"Surf Report: {len(spots_to_send)} spots near {location_name}"
-        lines = [f"Surf spots near {location_name}:\n"]
-        for spot, cond, dist in spots_to_send:
+        lines = [f"Surf spots near {location_name}:"]
+        lines.append("")
+        for i, (spot, cond, dist) in enumerate(spots_to_send):
             url = directions_url(spot, device)
             parking = spot.get("parking_cost", "Unknown")
-            lines.append(
-                f"{spot['name']} — {cond['wave_min']}-{cond['wave_max']}ft, {cond['condition_rating']}\n"
-                f"  Tide: {cond['tide_trend']} | Wind: {cond['wind_direction_type']} | Parking: {parking}\n"
-                f"  {url}\n"
-            )
+            lines.append(f"{i+1}. {spot['name']} — {cond['wave_min']}-{cond['wave_max']}ft, {cond['condition_rating']}")
+            lines.append(f"   Tide: {cond['tide_trend']} | Wind: {cond['wind_direction_type']}")
+            lines.append(f"   Parking: {parking} | {dist:.1f}mi away")
+            lines.append(f"   {url}")
+            lines.append("")
         body = "\n".join(lines)
         send_label = f"{len(spots_to_send)} spots"
 
+    # Send one single message (not individual per spot)
     sent = False
     if method in ("1", "3") and can_sms:
         sms_addr = get_sms_address(contact["phone"], contact["carrier"])
-        # For SMS full list, send individual texts (carrier gateways truncate long messages)
-        if len(spots_to_send) > 1:
-            for spot, cond, dist in spots_to_send:
-                url = directions_url(spot, device)
-                _, sms_body = build_spot_message(spot, cond, url)
-                send_sms(gmail, gmail_pw, sms_addr, sms_body)
+        if send_sms(gmail, gmail_pw, sms_addr, body):
             sent = True
-        else:
-            if send_sms(gmail, gmail_pw, sms_addr, body):
-                sent = True
 
     if method in ("2", "3") and can_email:
         if send_email(gmail, gmail_pw, contact["email"], subject, body):
