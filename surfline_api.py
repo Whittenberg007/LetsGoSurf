@@ -60,16 +60,32 @@ def get_surfline_conditions(spot_id: str) -> dict | None:
 
         wave = _get_current_entry(wave_data)
         wind = _get_current_entry(wind_data)
-        cond = cond_data[0]  # conditions are per-day, not per-hour
+        cond = cond_data[0] if cond_data else {}
 
-        # Pick AM or PM rating based on current hour
+        # Try to get structured rating from AM/PM periods
+        rating_key = None
+        rating_human = None
         hour = time.localtime().tm_hour
-        period = cond.get("am") if hour < 12 else cond.get("pm")
-        if not period:
-            period = cond.get("am") or cond.get("pm") or {}
+        for period_key in (("am" if hour < 12 else "pm"), "am", "pm"):
+            period = cond.get(period_key, {}) or {}
+            if period.get("rating"):  # skip None and empty string
+                rating_key = period["rating"]
+                rating_human = period.get("humanRelation") or rating_key.replace("_", " ").title()
+                break
 
-        rating_key = period.get("rating", "FAIR")
-        rating_human = period.get("humanRelation", rating_key.replace("_", " ").title())
+        # Fallback: derive rating from wind direction + wave optimal score
+        if not rating_key:
+            wind_type = (wind.get("directionType") or "").lower()
+            optimal = wave.get("optimalScore", 1)
+            if optimal >= 2 and wind_type == "offshore":
+                rating_key, rating_human = "GOOD", "Good"
+            elif optimal >= 1 and wind_type in ("offshore", "cross-shore"):
+                rating_key, rating_human = "FAIR_TO_GOOD", "Fair to Good"
+            elif wind_type == "onshore":
+                rating_key, rating_human = "POOR_TO_FAIR", "Poor to Fair"
+            else:
+                rating_key, rating_human = "FAIR", "Fair"
+
         rating_rank = CONDITION_RANK.get(rating_key, 4)
 
         return {
