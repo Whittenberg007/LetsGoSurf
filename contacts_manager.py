@@ -5,22 +5,30 @@ CARRIERS = {
     "tmobile": "{number}@tmomail.net",
     "att": "{number}@txt.att.net",
     "verizon": "{number}@vtext.com",
+    "spectrum": "{number}@vtext.com",
     "cricket": "{number}@sms.cricketwireless.net",
     "metro": "{number}@mymetropcs.com",
     "boost": "{number}@sms.myboostmobile.com",
     "uscellular": "{number}@email.uscc.net",
     "mint": "{number}@mailmymobile.net",
+    "googlefi": "{number}@msg.fi.google.com",
+    "visible": "{number}@vzwpix.com",
+    "xfinity": "{number}@vtext.com",
 }
 
 CARRIER_DISPLAY = {
     "tmobile": "T-Mobile",
     "att": "AT&T",
     "verizon": "Verizon",
+    "spectrum": "Spectrum Mobile",
     "cricket": "Cricket",
     "metro": "Metro by T-Mobile",
     "boost": "Boost Mobile",
     "uscellular": "US Cellular",
     "mint": "Mint Mobile",
+    "googlefi": "Google Fi",
+    "visible": "Visible",
+    "xfinity": "Xfinity Mobile",
 }
 
 CARRIER_KEYS = list(CARRIERS.keys())
@@ -50,6 +58,10 @@ def delete_contact(contacts: list, index: int) -> list:
 
 def get_sms_address(phone: str, carrier: str) -> str:
     """Convert phone + carrier to SMS email gateway address."""
+    if carrier.startswith("custom:"):
+        # Custom gateway stored as "custom:@domain.com"
+        gateway = carrier.replace("custom:", "")
+        return f"{phone}{gateway}"
     template = CARRIERS.get(carrier, "")
     return template.replace("{number}", phone)
 
@@ -78,7 +90,11 @@ def display_contact(contact: dict) -> str:
     """Format a contact for display."""
     parts = [contact["name"]]
     if contact.get("phone"):
-        carrier_name = CARRIER_DISPLAY.get(contact.get("carrier", ""), contact.get("carrier", ""))
+        carrier_key = contact.get("carrier", "")
+        if carrier_key.startswith("custom:"):
+            carrier_name = f"Custom ({carrier_key.replace('custom:', '')})"
+        else:
+            carrier_name = CARRIER_DISPLAY.get(carrier_key, carrier_key)
         device_name = DEVICE_TYPES.get(contact.get("device", ""), "")
         device_str = f", {device_name}" if device_name else ""
         parts.append(f"{contact['phone']} ({carrier_name}{device_str})")
@@ -88,7 +104,7 @@ def display_contact(contact: dict) -> str:
 
 
 def prompt_carrier() -> str:
-    """Display carrier menu and return carrier key."""
+    """Display carrier menu and return carrier key. Returns 'custom:gateway@domain' for manual entry."""
     print("    Carrier:")
     for i, key in enumerate(CARRIER_KEYS):
         col1 = f"      {i + 1}) {CARRIER_DISPLAY[key]}"
@@ -97,11 +113,21 @@ def prompt_carrier() -> str:
             print(f"{col1:<30}{col2}")
         elif i % 2 == 0:
             print(col1)
+    other_num = len(CARRIER_KEYS) + 1
+    print(f"      {other_num}) Other (enter SMS gateway manually)")
     while True:
         try:
-            choice = int(input("    Carrier #: ").strip()) - 1
-            if 0 <= choice < len(CARRIER_KEYS):
-                return CARRIER_KEYS[choice]
+            choice = int(input("    Carrier #: ").strip())
+            if 1 <= choice <= len(CARRIER_KEYS):
+                return CARRIER_KEYS[choice - 1]
+            elif choice == other_num:
+                print("    Enter the SMS email gateway for your carrier.")
+                print("    Format: @domain.com (e.g., @txt.att.net)")
+                print("    Google your carrier name + 'SMS email gateway' to find it.")
+                gateway = input("    Gateway (e.g., @txt.att.net): ").strip()
+                if not gateway.startswith("@"):
+                    gateway = "@" + gateway
+                return f"custom:{gateway}"
         except ValueError:
             pass
         print("    Invalid choice. Try again.")
