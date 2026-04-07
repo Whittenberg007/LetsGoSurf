@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+config.json
+contacts.json
+.pytest_cache/
+venv/
+.env
