@@ -83,6 +83,21 @@ def fetch_matching_spots(spots: list, user_lat: float, user_lon: float,
     return results
 
 
+def build_full_list_message(results: list, location_name: str, device: str = "android") -> tuple:
+    """Build subject and body for a multi-spot surf report. Returns (subject, body)."""
+    subject = f"Surf Report: {len(results)} spots near {location_name}"
+    lines = [f"Surf spots near {location_name}:", ""]
+    for i, (spot, cond, dist) in enumerate(results):
+        url = directions_url(spot, device)
+        parking = spot.get("parking_cost", "Unknown")
+        lines.append(f"{i+1}. {spot['name']} — {cond['wave_min']}-{cond['wave_max']}ft, {cond['condition_rating']}")
+        lines.append(f"   Tide: {cond['tide_trend']} | Wind: {cond['wind_direction_type']}")
+        lines.append(f"   Parking: {parking} | {dist:.1f}mi away")
+        lines.append(f"   {url}")
+        lines.append("")
+    return subject, "\n".join(lines)
+
+
 def find_waves(config: dict, contacts: list) -> list:
     """Main 'Find waves now' flow. Returns updated contacts list."""
     # Step 1: Select region
@@ -279,19 +294,7 @@ def find_waves(config: dict, contacts: list) -> list:
         subject, body = build_spot_message(spot, cond, url)
         send_label = spot["name"]
     else:
-        # Build one compiled message for the full list
-        subject = f"Surf Report: {len(spots_to_send)} spots near {location_name}"
-        lines = [f"Surf spots near {location_name}:"]
-        lines.append("")
-        for i, (spot, cond, dist) in enumerate(spots_to_send):
-            url = directions_url(spot, device)
-            parking = spot.get("parking_cost", "Unknown")
-            lines.append(f"{i+1}. {spot['name']} — {cond['wave_min']}-{cond['wave_max']}ft, {cond['condition_rating']}")
-            lines.append(f"   Tide: {cond['tide_trend']} | Wind: {cond['wind_direction_type']}")
-            lines.append(f"   Parking: {parking} | {dist:.1f}mi away")
-            lines.append(f"   {url}")
-            lines.append("")
-        body = "\n".join(lines)
+        subject, body = build_full_list_message(spots_to_send, location_name, device)
         send_label = f"{len(spots_to_send)} spots"
 
     # Send one single message (not individual per spot)

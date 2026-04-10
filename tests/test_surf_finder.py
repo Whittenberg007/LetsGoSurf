@@ -98,3 +98,63 @@ def test_fetch_matching_spots_uses_openmeteo_fallback():
     mock_surfline.assert_not_called()
     mock_meteo.assert_called_once()
     assert len(results) == 1
+
+
+from surf_finder import build_full_list_message
+
+
+def test_build_full_list_message_single_spot():
+    results = [
+        (
+            {"name": "Trestles", "parking_cost": "Free",
+             "lat": 33.38, "lon": -117.59,
+             "parking_lat": 33.38, "parking_lon": -117.59},
+            {"wave_min": 2, "wave_max": 3,
+             "condition_rating": "Good", "condition_rank": 6,
+             "tide_trend": "Rising", "wind_direction_type": "Offshore",
+             "wave_human": "", "wind_speed": 5},
+            12.3,
+        ),
+    ]
+    subject, body = build_full_list_message(results, "Santa Ana, CA", "android")
+    assert "1 spots" in subject or "1 spot" in subject
+    assert "Santa Ana" in subject
+    assert "Trestles" in body
+    assert "2-3" in body
+    assert "Good" in body
+    assert "google.com/maps" in body
+
+
+def test_build_full_list_message_multiple_spots():
+    spot_a = {"name": "Spot A", "parking_cost": "Free",
+              "lat": 33.0, "lon": -117.0,
+              "parking_lat": 33.0, "parking_lon": -117.0}
+    spot_b = {"name": "Spot B", "parking_cost": "$15/day",
+              "lat": 33.1, "lon": -117.1,
+              "parking_lat": 33.1, "parking_lon": -117.1}
+    cond = {"wave_min": 3, "wave_max": 4,
+            "condition_rating": "Fair", "condition_rank": 4,
+            "tide_trend": "Falling", "wind_direction_type": "Onshore",
+            "wave_human": "", "wind_speed": 8}
+
+    results = [(spot_a, cond, 5.0), (spot_b, cond, 10.0)]
+    subject, body = build_full_list_message(results, "92704", "iphone")
+    assert "2 spots" in subject
+    assert "Spot A" in body
+    assert "Spot B" in body
+    assert "apple.com" in body
+
+
+def test_build_full_list_message_iphone_vs_android():
+    spot = {"name": "Test", "parking_cost": "Free",
+            "lat": 33.0, "lon": -117.0,
+            "parking_lat": 33.0, "parking_lon": -117.0}
+    cond = {"wave_min": 2, "wave_max": 3,
+            "condition_rating": "Fair", "condition_rank": 4,
+            "tide_trend": "Rising", "wind_direction_type": "Offshore",
+            "wave_human": "", "wind_speed": 5}
+
+    _, body_android = build_full_list_message([(spot, cond, 5.0)], "Test", "android")
+    _, body_iphone = build_full_list_message([(spot, cond, 5.0)], "Test", "iphone")
+    assert "google.com/maps" in body_android
+    assert "maps.apple.com" in body_iphone
