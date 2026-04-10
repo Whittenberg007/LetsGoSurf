@@ -63,7 +63,9 @@ def parse_schedule_time(text: str) -> datetime | None:
     hour, minute = parsed_time
 
     # Parse day component
-    if day_str == "tomorrow":
+    if day_str == "today":
+        target_date = now.date()
+    elif day_str == "tomorrow":
         target_date = now.date() + timedelta(days=1)
     elif day_str in DAY_NAMES:
         target_day = DAY_NAMES[day_str]

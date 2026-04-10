@@ -42,6 +42,18 @@ class TestParseScheduleTime:
             result = parse_schedule_time("Sunday 7am")
         assert result == datetime(2026, 4, 12, 7, 0)
 
+    def test_today_future_time(self):
+        # 6am, scheduling "today 8:30am" -> today at 8:30
+        with _mock_now(2026, 4, 9, 6, 0):
+            result = parse_schedule_time("today 8:30am")
+        assert result == datetime(2026, 4, 9, 8, 30)
+
+    def test_today_past_time_returns_none(self):
+        # 10am, scheduling "today 8:30am" -> None (past)
+        with _mock_now(2026, 4, 9, 10, 0):
+            result = parse_schedule_time("today 8:30am")
+        assert result is None
+
     def test_same_day_past_time_goes_to_next_week(self):
         # Sunday at 8am, scheduling "Sunday 7am" -> next Sunday
         with _mock_now(2026, 4, 12, 8, 0):  # Sunday Apr 12
