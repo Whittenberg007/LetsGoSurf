@@ -2,6 +2,8 @@ __pycache__/
 *.pyc
 config.json
 contacts.json
+scheduled_jobs.json
+scheduled_log.txt
 .pytest_cache/
 venv/
 .env
