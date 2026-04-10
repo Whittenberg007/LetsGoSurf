@@ -68,3 +68,263 @@ class TestParseScheduleTime:
         with _mock_now(2026, 4, 9, 8, 0):
             result = parse_schedule_time("Saturday 12am")
         assert result == datetime(2026, 4, 11, 0, 0)
+
+
+import os
+import json
+import tempfile
+from unittest.mock import MagicMock
+from scheduler import load_jobs, save_jobs, schedule_job, cancel_job
+
+
+class TestJobCrud:
+    def setup_method(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.jobs_path = os.path.join(self.tmpdir, "scheduled_jobs.json")
+
+    def test_load_jobs_empty_when_no_file(self):
+        result = load_jobs(self.jobs_path)
+        assert result == []
+
+    def test_save_and_load_jobs(self):
+        jobs = [{"job_id": "surf_20260419_070000", "location": "92704"}]
+        save_jobs(jobs, self.jobs_path)
+        loaded = load_jobs(self.jobs_path)
+        assert loaded == jobs
+
+    def test_schedule_job_creates_entry(self):
+        with patch("scheduler.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+
+            job = schedule_job(
+                scheduled_time=datetime(2026, 4, 19, 7, 0),
+                location="92704",
+                wave_range="2-3",
+                radius_miles=30,
+                region="socal",
+                contact_name="Brian",
+                send_method="3",
+                jobs_path=self.jobs_path,
+            )
+
+        assert job["job_id"] == "surf_20260419_070000"
+        assert job["location"] == "92704"
+        assert job["contact_name"] == "Brian"
+        assert job["task_name"] == "LetsGoSurf_surf_20260419_070000"
+
+        saved = load_jobs(self.jobs_path)
+        assert len(saved) == 1
+        assert saved[0]["job_id"] == "surf_20260419_070000"
+
+    def test_schedule_job_calls_schtasks_create(self):
+        with patch("scheduler.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+
+            schedule_job(
+                scheduled_time=datetime(2026, 4, 19, 7, 0),
+                location="92704",
+                wave_range="2-3",
+                radius_miles=30,
+                region="socal",
+                contact_name="Brian",
+                send_method="3",
+                jobs_path=self.jobs_path,
+            )
+
+        mock_run.assert_called_once()
+        call_args = mock_run.call_args[0][0]
+        assert call_args[0] == "schtasks"
+        assert "/create" in call_args
+        assert "LetsGoSurf_surf_20260419_070000" in call_args
+
+    def test_schedule_job_rejects_duplicate(self):
+        existing = [{"job_id": "surf_20260419_070000", "location": "92704"}]
+        save_jobs(existing, self.jobs_path)
+
+        with patch("scheduler.subprocess.run") as mock_run:
+            import pytest
+            with pytest.raises(ValueError, match="already exists"):
+                schedule_job(
+                    scheduled_time=datetime(2026, 4, 19, 7, 0),
+                    location="92704",
+                    wave_range="2-3",
+                    radius_miles=30,
+                    region="socal",
+                    contact_name="Brian",
+                    send_method="3",
+                    jobs_path=self.jobs_path,
+                )
+        mock_run.assert_not_called()
+
+    def test_cancel_job_removes_entry(self):
+        jobs = [{
+            "job_id": "surf_20260419_070000",
+            "task_name": "LetsGoSurf_surf_20260419_070000",
+            "location": "92704",
+        }]
+        save_jobs(jobs, self.jobs_path)
+
+        with patch("scheduler.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            result = cancel_job("surf_20260419_070000", self.jobs_path)
+
+        assert result is True
+        remaining = load_jobs(self.jobs_path)
+        assert len(remaining) == 0
+
+    def test_cancel_job_calls_schtasks_delete(self):
+        jobs = [{
+            "job_id": "surf_20260419_070000",
+            "task_name": "LetsGoSurf_surf_20260419_070000",
+        }]
+        save_jobs(jobs, self.jobs_path)
+
+        with patch("scheduler.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            cancel_job("surf_20260419_070000", self.jobs_path)
+
+        call_args = mock_run.call_args[0][0]
+        assert call_args[0] == "schtasks"
+        assert "/delete" in call_args
+        assert "LetsGoSurf_surf_20260419_070000" in call_args
+
+    def test_cancel_nonexistent_job_returns_false(self):
+        with patch("scheduler.subprocess.run") as mock_run:
+            result = cancel_job("nonexistent_id", self.jobs_path)
+        assert result is False
+        mock_run.assert_not_called()
+
+
+from scheduler import run_scheduled_job
+
+
+def _make_job():
+    return {
+        "job_id": "surf_20260419_070000",
+        "scheduled_time": "2026-04-19T07:00:00",
+        "location": "92704",
+        "wave_range": "2-3",
+        "radius_miles": 30,
+        "region": "socal",
+        "contact_name": "Brian",
+        "send_method": "3",
+        "task_name": "LetsGoSurf_surf_20260419_070000",
+    }
+
+
+def _make_config():
+    return {
+        "gmail_address": "me@gmail.com",
+        "gmail_app_password": "xxxx",
+        "default_radius_miles": 30,
+    }
+
+
+def _make_contact():
+    return {
+        "name": "Brian",
+        "phone": "9495551234",
+        "carrier": "tmobile",
+        "device": "iphone",
+        "email": "brian@gmail.com",
+    }
+
+
+def _make_conditions():
+    return {
+        "wave_min": 2, "wave_max": 3,
+        "condition_rating": "Fair to Good", "condition_rank": 5,
+        "tide_trend": "Rising", "wind_direction_type": "Offshore",
+        "wave_human": "", "wind_speed": 5,
+    }
+
+
+class TestRunScheduledJob:
+    def setup_method(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.jobs_path = os.path.join(self.tmpdir, "scheduled_jobs.json")
+        self.log_path = os.path.join(self.tmpdir, "scheduled_log.txt")
+
+    def test_successful_run_sends_to_contact_and_self(self):
+        job = _make_job()
+        save_jobs([job], self.jobs_path)
+
+        spots = [{"name": "Trestles", "lat": 33.38, "lon": -117.59,
+                  "surfline_id": "abc", "parking_cost": "Free",
+                  "parking_lat": 33.38, "parking_lon": -117.59}]
+
+        with patch("scheduler.load_config", return_value=_make_config()), \
+             patch("scheduler.load_contacts", return_value=[_make_contact()]), \
+             patch("scheduler.load_region", return_value=spots), \
+             patch("scheduler.geocode", return_value=(33.7, -117.9, "Santa Ana, CA")), \
+             patch("scheduler.fetch_matching_spots", return_value=[
+                 (spots[0], _make_conditions(), 12.3),
+             ]), \
+             patch("scheduler.send_email", return_value=True) as mock_email, \
+             patch("scheduler.send_sms", return_value=True) as mock_sms, \
+             patch("scheduler.subprocess.run") as mock_run, \
+             patch("scheduler.LOG_PATH", self.log_path):
+            mock_run.return_value = MagicMock(returncode=0)
+
+            run_scheduled_job("surf_20260419_070000", self.jobs_path)
+
+        # SMS sent to Brian
+        assert mock_sms.call_count == 1
+        # Email sent to Brian AND to self
+        assert mock_email.call_count == 2
+        email_recipients = [call.args[2] for call in mock_email.call_args_list]
+        assert "brian@gmail.com" in email_recipients
+        assert "me@gmail.com" in email_recipients
+
+        # Job cleaned up
+        remaining = load_jobs(self.jobs_path)
+        assert len(remaining) == 0
+
+        # Log written
+        assert os.path.exists(self.log_path)
+
+    def test_missing_job_id_exits_silently(self):
+        save_jobs([], self.jobs_path)
+
+        with patch("scheduler.load_config", return_value=_make_config()):
+            run_scheduled_job("nonexistent_id", self.jobs_path)
+
+    def test_missing_contact_sends_error_to_self(self):
+        job = _make_job()
+        save_jobs([job], self.jobs_path)
+
+        with patch("scheduler.load_config", return_value=_make_config()), \
+             patch("scheduler.load_contacts", return_value=[]), \
+             patch("scheduler.send_email", return_value=True) as mock_email, \
+             patch("scheduler.subprocess.run") as mock_run, \
+             patch("scheduler.LOG_PATH", self.log_path):
+            mock_run.return_value = MagicMock(returncode=0)
+
+            run_scheduled_job("surf_20260419_070000", self.jobs_path)
+
+        assert mock_email.call_count == 1
+        assert "me@gmail.com" in mock_email.call_args.args[2]
+
+    def test_api_failure_sends_error_message(self):
+        job = _make_job()
+        save_jobs([job], self.jobs_path)
+
+        spots = [{"name": "Trestles", "lat": 33.38, "lon": -117.59,
+                  "surfline_id": "abc", "parking_cost": "Free",
+                  "parking_lat": 33.38, "parking_lon": -117.59}]
+
+        with patch("scheduler.load_config", return_value=_make_config()), \
+             patch("scheduler.load_contacts", return_value=[_make_contact()]), \
+             patch("scheduler.load_region", return_value=spots), \
+             patch("scheduler.geocode", return_value=(33.7, -117.9, "Santa Ana, CA")), \
+             patch("scheduler.fetch_matching_spots", return_value=[]), \
+             patch("scheduler.send_email", return_value=True) as mock_email, \
+             patch("scheduler.send_sms", return_value=True) as mock_sms, \
+             patch("scheduler.subprocess.run") as mock_run, \
+             patch("scheduler.time.sleep"), \
+             patch("scheduler.LOG_PATH", self.log_path):
+            mock_run.return_value = MagicMock(returncode=0)
+
+            run_scheduled_job("surf_20260419_070000", self.jobs_path)
+
+        assert mock_sms.call_count >= 1 or mock_email.call_count >= 1
