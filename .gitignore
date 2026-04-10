@@ -4,6 +4,7 @@ config.json
 contacts.json
 scheduled_jobs.json
 scheduled_log.txt
+letsgosurf_preview.png
 .pytest_cache/
 venv/
 .env
