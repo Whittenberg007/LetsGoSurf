@@ -44,6 +44,45 @@ def ranges_overlap(min1, max1, min2, max2) -> bool:
     return min1 <= max2 and min2 <= max1
 
 
+def fetch_matching_spots(spots: list, user_lat: float, user_lon: float,
+                         radius: float, wave_range: tuple) -> list:
+    """Filter spots by distance, fetch conditions, return all nearby with conditions.
+
+    Returns list of (spot, conditions, distance) tuples sorted by distance.
+    Fetches from Surfline if spot has surfline_id, else Open-Meteo.
+    """
+    desired_min, desired_max = wave_range
+
+    # Filter by distance
+    nearby = []
+    for spot in spots:
+        dist = haversine_miles(user_lat, user_lon, spot["lat"], spot["lon"])
+        if dist <= radius:
+            nearby.append((spot, dist))
+
+    # Fetch conditions for all nearby spots
+    all_conditions = []
+    for spot, dist in nearby:
+        if spot.get("surfline_id"):
+            conditions = get_surfline_conditions(spot["surfline_id"])
+        else:
+            conditions = get_openmeteo_conditions(spot["lat"], spot["lon"])
+
+        if conditions:
+            all_conditions.append((spot, conditions, dist))
+
+    # Filter to matching wave size
+    matches = [
+        (spot, cond, dist) for spot, cond, dist in all_conditions
+        if ranges_overlap(desired_min, desired_max, cond["wave_min"], cond["wave_max"])
+    ]
+
+    # If matches exist, return only matches; otherwise return all nearby
+    results = matches if matches else all_conditions
+    results.sort(key=lambda x: x[2])
+    return results
+
+
 def find_waves(config: dict, contacts: list) -> list:
     """Main 'Find waves now' flow. Returns updated contacts list."""
     # Step 1: Select region
@@ -98,92 +137,47 @@ def find_waves(config: dict, contacts: list) -> list:
 
     desired_min, desired_max = wave_range
     radius = config.get("default_radius_miles", 30)
+    print(f"\n  Checking conditions for spots within {radius}mi...")
 
-    # Step 4: Filter by distance
-    nearby = []
-    for spot in spots:
-        dist = haversine_miles(user_lat, user_lon, spot["lat"], spot["lon"])
-        if dist <= radius:
-            nearby.append((spot, dist))
+    results = fetch_matching_spots(spots, user_lat, user_lon, radius, wave_range)
 
-    if not nearby:
-        print(f"\n  No spots found within {radius} miles of {location_name}.")
-        return contacts
-
-    print(f"\n  Checking conditions at {len(nearby)} spots within {radius}mi...")
-
-    # Step 5: Query conditions for ALL nearby spots
-    all_conditions = []
-    for spot, dist in nearby:
-        if spot.get("surfline_id"):
-            conditions = get_surfline_conditions(spot["surfline_id"])
-        else:
-            conditions = get_openmeteo_conditions(spot["lat"], spot["lon"])
-
-        if conditions:
-            all_conditions.append((spot, conditions, dist))
-
-    if not all_conditions:
+    if not results:
         print(f"\n  Could not fetch conditions for any spots near {location_name}.")
         print("  Surfline may be down. Try again in a minute.")
         return contacts
 
-    # Filter to matching wave size
-    results = [
-        (spot, cond, dist) for spot, cond, dist in all_conditions
-        if ranges_overlap(desired_min, desired_max, cond["wave_min"], cond["wave_max"])
-    ]
+    # Check if any results are exact wave matches
+    has_exact_matches = any(
+        ranges_overlap(desired_min, desired_max, cond["wave_min"], cond["wave_max"])
+        for _, cond, _ in results
+    )
 
-    if not results:
-        # Show what IS out there so the user can adjust
-        all_conditions.sort(key=lambda x: x[2])
+    if has_exact_matches:
+        print(f"\n  Surf spots with {wave_input}ft waves within {radius}mi of {location_name}:\n")
+    else:
         print(f"\n  No spots with exactly {wave_input}ft waves near {location_name}.")
-        print(f"  Here's what's currently out there ({len(all_conditions)} spots):\n")
+        print(f"  Here's what's currently out there ({len(results)} spots):\n")
 
-        header = f"  {'#':<4}{'Spot':<26}{'Waves':<10}{'Conditions':<14}{'Tide':<10}{'Wind':<12}{'Parking':<18}{'Distance':<10}Directions"
-        print(header)
-        print("  " + "-" * (len(header) - 2))
+    header = f"  {'#':<4}{'Spot':<26}{'Waves':<10}{'Conditions':<14}{'Tide':<10}{'Wind':<12}{'Parking':<18}{'Distance':<10}Directions"
+    print(header)
+    print("  " + "-" * (len(header) - 2))
 
-        for i, (spot, cond, dist) in enumerate(all_conditions):
-            waves = f"{cond['wave_min']}-{cond['wave_max']} ft"
-            url = directions_url(spot)
-            parking = spot.get("parking_cost", "Unknown")
-            print(f"  {i+1:<4}{spot['name']:<26}{waves:<10}{cond['condition_rating']:<14}{cond['tide_trend']:<10}{cond['wind_direction_type']:<12}{parking:<18}{dist:<10.1f}{url}")
+    for i, (spot, cond, dist) in enumerate(results):
+        waves = f"{cond['wave_min']}-{cond['wave_max']} ft"
+        url = directions_url(spot)
+        parking = spot.get("parking_cost", "Unknown")
+        print(f"  {i+1:<4}{spot['name']:<26}{waves:<10}{cond['condition_rating']:<14}{cond['tide_trend']:<10}{cond['wind_direction_type']:<12}{parking:<18}{dist:<10.1f}{url}")
 
-        # Suggest wave ranges that have results
+    if has_exact_matches:
+        print(f"\n  Found {len(results)} spots matching your criteria.")
+    else:
         wave_sizes = set()
-        for _, cond, _ in all_conditions:
+        for _, cond, _ in results:
             low = int(cond["wave_min"])
             high = max(low + 1, int(cond["wave_max"]) + 1)
             wave_sizes.add(f"{low}-{high}")
         if wave_sizes:
             print(f"\n  Try these wave ranges: {', '.join(sorted(wave_sizes))}ft")
-
-        # Still allow sending directions from the full list
-        results = all_conditions
-
-    else:
-        # Sort matches by distance (default)
-        results.sort(key=lambda x: x[2])
-
-    # Step 6: Display results (only if we had matches — "no matches" already displayed above)
-    has_exact_matches = any(
-        ranges_overlap(desired_min, desired_max, cond["wave_min"], cond["wave_max"])
-        for _, cond, _ in results
-    )
-    if has_exact_matches:
-        print(f"\n  Surf spots with {wave_input}ft waves within {radius}mi of {location_name}:\n")
-        header = f"  {'#':<4}{'Spot':<26}{'Waves':<10}{'Conditions':<14}{'Tide':<10}{'Wind':<12}{'Parking':<18}{'Distance':<10}Directions"
-        print(header)
-        print("  " + "-" * (len(header) - 2))
-
-        for i, (spot, cond, dist) in enumerate(results):
-            waves = f"{cond['wave_min']}-{cond['wave_max']} ft"
-            url = directions_url(spot)
-            parking = spot.get("parking_cost", "Unknown")
-            print(f"  {i+1:<4}{spot['name']:<26}{waves:<10}{cond['condition_rating']:<14}{cond['tide_trend']:<10}{cond['wind_direction_type']:<12}{parking:<18}{dist:<10.1f}{url}")
-
-        print(f"\n  Found {len(results)} spots matching your criteria.")
 
     # Sort option
     header = f"  {'#':<4}{'Spot':<26}{'Waves':<10}{'Conditions':<14}{'Tide':<10}{'Wind':<12}{'Parking':<18}{'Distance':<10}Directions"
