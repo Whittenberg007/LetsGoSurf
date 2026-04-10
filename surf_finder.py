@@ -12,6 +12,7 @@ from contacts_manager import (
 )
 from regions_manager import list_regions, load_region, regions_menu
 from messaging import build_spot_message, send_email, send_sms
+from datetime import datetime
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 SPOTS_DIR = os.path.join(APP_DIR, "spots")
@@ -327,7 +328,231 @@ def find_waves(config: dict, contacts: list) -> list:
     return contacts
 
 
+def scheduled_checks_menu(config: dict, contacts: list) -> list:
+    """Interactive submenu for managing scheduled surf checks."""
+    while True:
+        print("\n  Scheduled Checks:")
+        print("    1) Schedule a new check")
+        print("    2) View upcoming checks")
+        print("    3) Cancel a check")
+        print("    4) Back")
+
+        choice = input("\n  Choice: ").strip()
+
+        if choice == "1":
+            contacts = schedule_new_check(config, contacts)
+        elif choice == "2":
+            view_upcoming_checks()
+        elif choice == "3":
+            cancel_check()
+        elif choice == "4":
+            break
+        else:
+            print("  Invalid choice. Enter 1-4.")
+
+    return contacts
+
+
+def schedule_new_check(config: dict, contacts: list) -> list:
+    """Interactive flow to schedule a new surf check."""
+    from scheduler import parse_schedule_time, schedule_job
+
+    # Select region
+    regions = list_regions(SPOTS_DIR)
+    if not regions:
+        print("\n  No spot regions found. Add one in 'Manage spot regions' first.")
+        return contacts
+
+    if len(regions) == 1:
+        region_name, region_count, region_path = regions[0]
+        print(f"\n  Using region: {region_name.title()} ({region_count} spots)")
+    else:
+        print("\n  Select region:")
+        for i, (name, count, _) in enumerate(regions):
+            print(f"    {i + 1}) {name.title()} ({count} spots)")
+        try:
+            idx = int(input("\n  Region #: ").strip()) - 1
+            region_name, region_count, region_path = regions[idx]
+        except (ValueError, IndexError):
+            print("  Invalid choice.")
+            return contacts
+
+    # Location
+    home = config.get("home_location", "")
+    if home:
+        loc_input = input(f"\n  Location [{home}]: ").strip()
+        if not loc_input:
+            loc_input = home
+    else:
+        loc_input = input("\n  Enter your location (zip or city): ").strip()
+
+    # Validate location
+    print("  Geocoding...")
+    geo_result = geocode(loc_input)
+    if not geo_result:
+        print("  Could not find that location. Try a zip code or different city name.")
+        return contacts
+    _, _, location_display = geo_result
+    print(f"  Found: {location_display}")
+
+    # Wave size
+    wave_input = input("  Desired wave size (e.g., 2-3): ").strip()
+    wave_range = parse_wave_range(wave_input)
+    if not wave_range:
+        print("  Invalid format. Use min-max like '2-3' or '3-4'.")
+        return contacts
+
+    # When to check
+    print("\n  When should we check?")
+    print("  Examples: 'Sunday 7am', 'tomorrow 6:30pm', '2026-04-19 07:00'")
+    time_input = input("  When: ").strip()
+    scheduled_time = parse_schedule_time(time_input)
+    if not scheduled_time:
+        print("  Invalid or past time. Try again.")
+        return contacts
+
+    display_time = scheduled_time.strftime("%A, %B %d, %Y at %I:%M %p")
+    print(f"  Scheduled for: {display_time}")
+
+    # Select contact
+    if not contacts:
+        print("\n  No contacts saved. Add one in 'Manage contacts' first.")
+        return contacts
+
+    print("\n  Send to:")
+    for i, c in enumerate(contacts):
+        print(f"    {i + 1}) {c['name']} — {display_contact(c)}")
+    print(f"    {len(contacts) + 1}) Enter new recipient")
+
+    try:
+        recip_choice = int(input("\n  Choice: ").strip()) - 1
+    except ValueError:
+        print("  Invalid choice.")
+        return contacts
+
+    is_new = recip_choice == len(contacts)
+    if is_new:
+        contact = prompt_new_contact()
+    elif 0 <= recip_choice < len(contacts):
+        contact = contacts[recip_choice]
+    else:
+        print("  Invalid choice.")
+        return contacts
+
+    # Send method
+    can_sms = bool(contact.get("phone") and contact.get("carrier"))
+    can_email = bool(contact.get("email"))
+
+    if can_sms and can_email:
+        print("\n  How to send?")
+        print("    1) Text (SMS)")
+        print("    2) Email")
+        print("    3) Both")
+        method = input("  Choice: ").strip()
+        if method not in ("1", "2", "3"):
+            print("  Invalid choice.")
+            return contacts
+    elif can_sms:
+        method = "1"
+    elif can_email:
+        method = "2"
+    else:
+        print("  Contact has no phone or email.")
+        return contacts
+
+    # Schedule it
+    radius = config.get("default_radius_miles", 30)
+
+    try:
+        job = schedule_job(
+            scheduled_time=scheduled_time,
+            location=loc_input,
+            wave_range=wave_input,
+            radius_miles=radius,
+            region=region_name,
+            contact_name=contact["name"],
+            send_method=method,
+        )
+    except Exception as e:
+        print(f"\n  Failed to create scheduled task: {e}")
+        print("  You may need to run as administrator.")
+        return contacts
+
+    method_name = {"1": "text", "2": "email", "3": "text & email"}.get(method, "message")
+    short_time = scheduled_time.strftime("%a %b %d %I:%M %p")
+    gmail = config.get("gmail_address", "")
+    print(f"\n  Scheduled! Surf check will run at {short_time}")
+    print(f"    Results sent to {contact['name']} via {method_name}")
+    print(f"    A copy will also be sent to you ({gmail})")
+
+    # Save new contact if needed
+    if is_new:
+        if input("\n  Save this contact for next time? (y/n): ").strip().lower() == "y":
+            name = input("    Name: ").strip()
+            if name:
+                contact["name"] = name
+            contacts = add_contact(contacts, contact)
+            save_contacts(contacts, CONTACTS_PATH)
+            print(f"    Saved \"{contact['name']}\"!")
+
+    return contacts
+
+
+def view_upcoming_checks():
+    """Display all pending scheduled checks."""
+    from scheduler import load_jobs
+
+    jobs = load_jobs()
+    if not jobs:
+        print("\n  No scheduled checks.")
+        return
+
+    print(f"\n  {'#':<4}{'When':<26}{'Location':<12}{'Waves':<10}{'Contact':<12}Send via")
+    print("  " + "-" * 74)
+    for i, job in enumerate(jobs):
+        dt = datetime.fromisoformat(job["scheduled_time"])
+        when = dt.strftime("%a %b %d, %I:%M %p")
+        method_name = {"1": "text", "2": "email", "3": "text & email"}.get(
+            job["send_method"], "?")
+        waves = f"{job['wave_range']}ft"
+        print(f"  {i+1:<4}{when:<26}{job['location']:<12}{waves:<10}"
+              f"{job['contact_name']:<12}{method_name}")
+
+
+def cancel_check():
+    """Interactive flow to cancel a scheduled check."""
+    from scheduler import load_jobs, cancel_job
+
+    jobs = load_jobs()
+    if not jobs:
+        print("\n  No scheduled checks to cancel.")
+        return
+
+    view_upcoming_checks()
+
+    try:
+        idx = int(input("\n  Cancel check #: ").strip()) - 1
+        if not (0 <= idx < len(jobs)):
+            print("  Invalid choice.")
+            return
+    except ValueError:
+        print("  Invalid choice.")
+        return
+
+    job = jobs[idx]
+    if cancel_job(job["job_id"]):
+        print(f"  Cancelled: {job['job_id']}")
+    else:
+        print("  Failed to cancel. Job may have already run.")
+
+
 def main():
+    # Handle --run-scheduled CLI flag
+    if len(sys.argv) == 3 and sys.argv[1] == "--run-scheduled":
+        from scheduler import run_scheduled_job
+        run_scheduled_job(sys.argv[2])
+        return
+
     print("\n  LetsGoSurf - Surf Finder\n")
 
     config = load_config(CONFIG_PATH)
@@ -343,7 +568,8 @@ def main():
         print("    2) Manage spot regions")
         print("    3) Manage contacts")
         print("    4) Settings")
-        print("    5) Quit")
+        print("    5) Scheduled checks")
+        print("    6) Quit")
 
         choice = input("\n  Choice: ").strip()
         if choice == "1":
@@ -355,10 +581,12 @@ def main():
         elif choice == "4":
             config = settings_menu(config, CONFIG_PATH)
         elif choice == "5":
+            contacts = scheduled_checks_menu(config, contacts)
+        elif choice == "6":
             print("\n  Hang loose!\n")
             break
         else:
-            print("  Invalid choice. Enter 1-5.")
+            print("  Invalid choice. Enter 1-6.")
 
 
 if __name__ == "__main__":
