@@ -99,6 +99,16 @@ def build_full_list_message(results: list, location_name: str, device: str = "an
     return subject, "\n".join(lines)
 
 
+def build_sms_list_message(results: list, location_name: str, device: str = "android") -> str:
+    """Build a condensed SMS body for a multi-spot surf report. Fits carrier SMS limits."""
+    lines = [f"Surf near {location_name}:"]
+    for i, (spot, cond, dist) in enumerate(results):
+        url = directions_url(spot, device)
+        lines.append(f"{spot['name']} {cond['wave_min']}-{cond['wave_max']}ft {cond['condition_rating']}")
+        lines.append(url)
+    return "\n".join(lines)
+
+
 def find_waves(config: dict, contacts: list) -> list:
     """Main 'Find waves now' flow. Returns updated contacts list."""
     # Step 1: Select region

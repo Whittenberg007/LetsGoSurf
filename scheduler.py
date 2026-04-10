@@ -9,7 +9,7 @@ from config_manager import load_config
 from contacts_manager import load_contacts, get_sms_address
 from regions_manager import load_region
 from geo import geocode
-from surf_finder import fetch_matching_spots, build_full_list_message, parse_wave_range
+from surf_finder import fetch_matching_spots, build_full_list_message, build_sms_list_message, parse_wave_range
 from messaging import send_email, send_sms
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -299,9 +299,14 @@ def run_scheduled_job(job_id: str, jobs_path: str = None):
     # Build and send the surf report
     device = contact.get("device", "android")
     subject, body = build_full_list_message(results, location_name, device)
+    sms_body = build_sms_list_message(results, location_name, device)
 
-    sent = _send_to_contact(gmail, gmail_pw, contact, job["send_method"], subject, body)
-    self_sent = send_email(gmail, gmail_pw, gmail, f"[Copy] {subject}", body)
+    sent = _send_to_contact(gmail, gmail_pw, contact, job["send_method"], subject, body, sms_body)
+
+    # Send copy to self with clear labeling
+    copy_subject = f"[Copy] {subject}"
+    copy_header = f"This is a copy of the report sent to {contact['name']}.\n\n"
+    self_sent = send_email(gmail, gmail_pw, gmail, copy_subject, copy_header + body)
 
     if not sent and not self_sent:
         # Gmail auth likely failed — do NOT delete job so user can investigate and retry
@@ -313,15 +318,20 @@ def run_scheduled_job(job_id: str, jobs_path: str = None):
 
 
 def _send_to_contact(gmail: str, gmail_pw: str, contact: dict,
-                     send_method: str, subject: str, body: str) -> bool:
-    """Send a message to a contact via their preferred method. Returns True if any send succeeded."""
+                     send_method: str, subject: str, body: str,
+                     sms_body: str = None) -> bool:
+    """Send a message to a contact via their preferred method. Returns True if any send succeeded.
+
+    Uses sms_body for SMS (condensed for carrier limits) and body for email (full detail).
+    If sms_body is not provided, falls back to body for SMS too.
+    """
     sent = False
     can_sms = bool(contact.get("phone") and contact.get("carrier"))
     can_email = bool(contact.get("email"))
 
     if send_method in ("1", "3") and can_sms:
         sms_addr = get_sms_address(contact["phone"], contact["carrier"])
-        if send_sms(gmail, gmail_pw, sms_addr, body):
+        if send_sms(gmail, gmail_pw, sms_addr, sms_body or body):
             sent = True
 
     if send_method in ("2", "3") and can_email:
