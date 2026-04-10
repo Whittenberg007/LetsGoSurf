@@ -137,7 +137,14 @@ def find_waves(config: dict, contacts: list) -> list:
 
     desired_min, desired_max = wave_range
     radius = config.get("default_radius_miles", 30)
-    print(f"\n  Checking conditions for spots within {radius}mi...")
+
+    # Check if any spots are within radius before making API calls
+    nearby_count = sum(1 for s in spots if haversine_miles(user_lat, user_lon, s["lat"], s["lon"]) <= radius)
+    if nearby_count == 0:
+        print(f"\n  No spots found within {radius} miles of {location_name}.")
+        return contacts
+
+    print(f"\n  Checking conditions at {nearby_count} spots within {radius}mi...")
 
     results = fetch_matching_spots(spots, user_lat, user_lon, radius, wave_range)
 
